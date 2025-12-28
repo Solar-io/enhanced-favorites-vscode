@@ -75,6 +75,8 @@ export class Commands {
         context.subscriptions.push(this.copyUrl());
         context.subscriptions.push(this.setHighlightColor());
         context.subscriptions.push(this.setBadge());
+        context.subscriptions.push(this.removeHighlightColor());
+        context.subscriptions.push(this.removeBadge());
     }
     public favoritesBrowse = () => {
         return vscode.commands.registerCommand("favorites.browse",
@@ -214,7 +216,8 @@ export class Commands {
                 if (value == null) {
                     return;
                 }
-                const fsPath = value.resourceUri.fsPath;
+                // Use value.value which stores the actual path, not resourceUri which may be a favorites:// URI
+                const fsPath = value.value;
                 try {
                     await vscode.env.clipboard.writeText(fsPath);
                     vscode.window.showInformationMessage(`Path copied: ${fsPath}`);
@@ -230,7 +233,8 @@ export class Commands {
                 if (value == null) {
                     return;
                 }
-                const name = path.basename(value.resourceUri.fsPath);
+                // Use value.value which stores the actual path, not resourceUri which may be a favorites:// URI
+                const name = path.basename(value.value);
                 try {
                     await vscode.env.clipboard.writeText(name);
                     vscode.window.showInformationMessage(`Name copied: ${name}`);
@@ -832,11 +836,15 @@ export class Commands {
 
     public openUrl = () => {
         return vscode.commands.registerCommand("favorites.open.url",
-            async (value: ViewItem) => {
-                if (!value?.id) return;
-                const resource = await this.favorites.getResourceById(value.id);
-                if (resource?.url) {
-                    await this.urlFavorites.openUrl(resource.url);
+            async (value: ViewItem | { id: string; url: string }) => {
+                // Handle both ViewItem (from context menu) and direct object (from click)
+                if ('url' in value && value.url) {
+                    await this.urlFavorites.openUrl(value.url);
+                } else if (value?.id) {
+                    const resource = await this.favorites.getResourceById(value.id);
+                    if (resource?.url) {
+                        await this.urlFavorites.openUrl(resource.url);
+                    }
                 }
             });
     }
@@ -905,6 +913,32 @@ export class Commands {
                     this.decorationProvider.refresh();
                     this.providers.refresh();
                 }
+            });
+    }
+
+    public removeHighlightColor = () => {
+        return vscode.commands.registerCommand("favorites.remove.highlight",
+            async (value: ViewItem) => {
+                if (!value?.id) return;
+
+                await this.favorites.updateResource(value.id, {
+                    highlightColor: undefined
+                });
+                this.decorationProvider.refresh();
+                this.providers.refresh();
+            });
+    }
+
+    public removeBadge = () => {
+        return vscode.commands.registerCommand("favorites.remove.badge",
+            async (value: ViewItem) => {
+                if (!value?.id) return;
+
+                await this.favorites.updateResource(value.id, {
+                    highlightBadge: undefined
+                });
+                this.decorationProvider.refresh();
+                this.providers.refresh();
             });
     }
 }

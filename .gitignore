@@ -7,3 +7,4 @@ promo/**
 svg-generated/**
 .favorites.json
 logs/
+*.vsix

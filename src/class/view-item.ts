@@ -28,6 +28,7 @@ export class ViewItem extends vscode.TreeItem {
         public id?: string,
         public parentId?: string,
         public tooltipText?: string,
+        public badge?: string,
     ) {
         super(label, collapsibleState);
 
@@ -40,6 +41,11 @@ export class ViewItem extends vscode.TreeItem {
 
         this.tooltip = tooltipText || value;
         this.iconPath = icon as any;
+
+        // Show badge as description (appears after the label)
+        if (badge) {
+            this.description = badge;
+        }
     }
     public get isFavorite() {
         return this.contextValue === "FAVORITE_DIRECTORY" || this.contextValue === "FAVORITE_FILE";

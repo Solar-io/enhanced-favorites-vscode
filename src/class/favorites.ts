@@ -299,7 +299,22 @@ export class Favorites {
         return new Promise<StoredResource[]>((resolve, reject) => {
 
             from(this.storage.get()).pipe(
-                tap((list) => this.stateList.next(list)),
+                tap((list) => {
+                    // Migration: Add IDs to any items that don't have them
+                    let needsSave = false;
+                    for (const item of list) {
+                        if (!item.id) {
+                            item.id = this.generateId();
+                            needsSave = true;
+                        }
+                    }
+                    // Save if we added any IDs (async, don't wait)
+                    if (needsSave) {
+                        console.log('[Favorites] Migrating items without IDs');
+                        this.storage.save(list);
+                    }
+                    this.stateList.next(list);
+                }),
             ).subscribe((list) => {
                 resolve(list);
             }, (e) => {
@@ -380,10 +395,29 @@ export class Favorites {
     public sortStoredResources(list: StoredResource[]): Promise<StoredResource[]> {
         return new Promise<StoredResource[]>((resolve, reject) => {
             try {
+                // Check if any items have manual sortOrder - if so, use manual ordering
+                const hasManualOrder = list.some(item => item.sortOrder !== undefined);
 
+                if (hasManualOrder) {
+                    // Use manual sort order, falling back to name for items without sortOrder
+                    const sorted = [...list].sort((a, b) => {
+                        const aOrder = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
+                        const bOrder = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+                        if (aOrder !== bOrder) {
+                            return aOrder - bOrder;
+                        }
+                        // Fall back to name comparison
+                        return (a.name || "").localeCompare(b.name || "");
+                    });
+                    resolve(sorted);
+                    return;
+                }
+
+                // Original alphabetical sorting logic
                 const dirs = list.filter((i) => i.type === ResourceType.Directory);
                 const files = list.filter((i) => i.type === ResourceType.File);
                 const groups = list.filter((i) => i.type === ResourceType.Group);
+                const urls = list.filter((i) => i.type === ResourceType.URL);
 
                 const sortDirection = workspace.get("sortDirection");
                 const groupsFirst = workspace.get("groupsFirst");
@@ -413,22 +447,33 @@ export class Favorites {
 
                 });
 
+                const urlsAZ = urls.sort((a, b) => {
+                    const aName = (a.urlAlias || a.name || "").toLocaleLowerCase();
+                    const bName = (b.urlAlias || b.name || "").toLocaleLowerCase();
+                    if (aName < bName) { return -1; }
+                    if (aName === bName) { return 0; }
+                    if (aName > bName) { return 1; }
+                });
+
                 let fsItems: StoredResource[];
                 let groupsPrepared: StoredResource[];
+                let urlsPrepared: StoredResource[];
 
                 if (sortDirection === "ASC") {
                     fsItems = dirsAZ.concat(filesAZ);
                     groupsPrepared = groupsAZ;
+                    urlsPrepared = urlsAZ;
                 } else {
                     fsItems = dirsAZ.reverse().concat(filesAZ.reverse());
                     groupsPrepared = groupsAZ.reverse();
+                    urlsPrepared = urlsAZ.reverse();
                 }
                 let final: StoredResource[];
 
                 if (groupsFirst) {
-                    final = groupsPrepared.concat(fsItems);
+                    final = groupsPrepared.concat(fsItems).concat(urlsPrepared);
                 } else {
-                    final = fsItems.concat(groupsPrepared);
+                    final = fsItems.concat(groupsPrepared).concat(urlsPrepared);
                 }
 
                 resolve(final);
@@ -511,6 +556,7 @@ export class Favorites {
                         i.id,
                         i.parent_id,
                         (i.label != null) ? `[alias] ${path.basename(i.name)}` : null,
+                        i.highlightBadge,
                     );
                 } else {
                     const fPath = i.fsPath;
@@ -531,6 +577,7 @@ export class Favorites {
                         i.id,
                         i.parent_id,
                         (i.label != null) ? `[alias] ${path.basename(i.name)}` : null,
+                        i.highlightBadge,
                     );
                 }
 
@@ -552,6 +599,7 @@ export class Favorites {
                         i.id,
                         i.parent_id,
                         (i.label != null) ? `[alias] ${i.name}` : null,
+                        i.highlightBadge,
                     );
 
                 } else {
@@ -568,6 +616,7 @@ export class Favorites {
                         i.id,
                         i.parent_id,
                         (i.label != null) ? `[alias] ${i.name}` : null,
+                        i.highlightBadge,
                     );
                 }
 
@@ -594,7 +643,8 @@ export class Favorites {
                     null,
                     i.id,
                     i.parent_id,
-
+                    null,
+                    i.highlightBadge,
                 );
                 break;
             case ResourceType.URL:
@@ -609,11 +659,12 @@ export class Favorites {
                     {
                         command: "favorites.open.url",
                         title: "Open URL",
-                        arguments: [null],
+                        arguments: [{ id: i.id, url: i.url }],
                     },
                     i.id,
                     i.parent_id,
                     i.url,
+                    i.highlightBadge,
                 );
                 break;
         }
@@ -748,7 +799,7 @@ export class Favorites {
             this.get()
                 .then((list) => {
                     list.push(resource);
-                    return this.storage.save(list);
+                    return this.save(list);  // Use this.save() to emit stateList update
                 })
                 .then(() => {
                     resolve();
@@ -766,7 +817,7 @@ export class Favorites {
                     const index = list.findIndex(r => r.id === id);
                     if (index !== -1) {
                         list[index] = { ...list[index], ...updates };
-                        return this.storage.save(list);
+                        return this.save(list);  // Use this.save() to emit stateList update
                     }
                     return Promise.resolve();
                 })

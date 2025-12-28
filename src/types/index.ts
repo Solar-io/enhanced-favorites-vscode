@@ -45,6 +45,8 @@ export interface StoredResource {
     // NEW fields for color highlighting
     highlightColor?: string;
     highlightBadge?: string;
+    // NEW field for manual ordering
+    sortOrder?: number;
 }
 
 export interface FilesystemResource {

@@ -2,6 +2,7 @@ import { merge } from "rxjs";
 import { takeUntil, tap } from "rxjs/operators";
 import * as vscode from "vscode";
 import { DataProvider } from "./class/dataProvider";
+import { FavoritesDragAndDropController } from "./class/drag-drop-controller";
 import { Favorites } from "./class/favorites";
 import { FsWatcher } from "./class/fs-watcher";
 import { Global } from "./class/global";
@@ -41,8 +42,19 @@ export function activate(context: vscode.ExtensionContext) {
         },
     };
 
-    const treeExplorer = vscode.window.createTreeView<ViewItem>("favorites", { treeDataProvider: providers.explorer });
-    const treeActivity = vscode.window.createTreeView<ViewItem>("favoritesActivity", { treeDataProvider: providers.activity });
+    // Create drag-and-drop controller for reordering favorites
+    const dragDropController = new FavoritesDragAndDropController(favorites, providers.refresh);
+
+    const treeExplorer = vscode.window.createTreeView<ViewItem>("favorites", {
+        treeDataProvider: providers.explorer,
+        dragAndDropController: dragDropController,
+        canSelectMany: true,
+    });
+    const treeActivity = vscode.window.createTreeView<ViewItem>("favoritesActivity", {
+        treeDataProvider: providers.activity,
+        dragAndDropController: dragDropController,
+        canSelectMany: true,
+    });
 
     const managerExplorer = new TreeViewManager(treeExplorer, context, favorites, providers.explorer);
     const managerActivity = new TreeViewManager(treeActivity, context, favorites, providers.activity);

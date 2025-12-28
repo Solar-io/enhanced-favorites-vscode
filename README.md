@@ -37,6 +37,13 @@ A VS Code extension to manage workspace favorites with enhanced features includi
 - Add optional 2-character badges to favorites
 - Colors appear as text decoration in the tree view
 
+#### Drag-and-Drop Reordering
+- Manually arrange favorites in any order by dragging and dropping
+- Drag items to reorder within a group or at root level
+- Drag items between groups to move them
+- Drag items onto a group to move them into that group
+- Manual ordering overrides alphabetical sorting
+
 ## Installation
 
 Open Visual Studio Code, press `Ctrl+P` and type:
@@ -64,6 +71,12 @@ Right-click any favorite and select `Set badge`, then enter a 2-character badge.
 
 ### Copy path (Remote-friendly)
 Right-click any file/folder and select `Copy path` - this works correctly even in Remote SSH, WSL, or Codespaces.
+
+### Reordering favorites
+Drag and drop items in the Favorites view to reorder them. You can:
+- Drag an item up or down to change its position within its current group
+- Drag an item onto a group to move it into that group
+- Drag items from one group to another
 
 ## Configuration
 

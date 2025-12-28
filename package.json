@@ -32,12 +32,12 @@
     },
     "icon": "icons/favorites.png",
     "bugs": {
-        "url": "https://github.com/sgallant/enhanced-favorites-vscode/issues"
+        "url": "https://github.com/Solar-io/enhanced-favorites-vscode/issues"
     },
-    "homepage": "https://github.com/sgallant/enhanced-favorites-vscode/blob/main/README.md",
+    "homepage": "https://github.com/Solar-io/enhanced-favorites-vscode/blob/main/README.md",
     "repository": {
         "type": "git",
-        "url": "https://github.com/sgallant/enhanced-favorites-vscode.git"
+        "url": "https://github.com/Solar-io/enhanced-favorites-vscode.git"
     },
     "activationEvents": [],
     "license": "GPL-3.0",
@@ -252,36 +252,6 @@
                 }
             ],
             "view/item/context": [
-                {
-                    "command": "favorites.deleteFavorite",
-                    "when": "viewItem == FAVORITE_FILE",
-                    "group": "operation"
-                },
-                {
-                    "command": "favorites.deleteFavorite",
-                    "when": "viewItem == FAVORITE_DIRECTORY",
-                    "group": "operation"
-                },
-                {
-                    "command": "favorites.alias.modify",
-                    "when": "viewItem == FAVORITE_FILE",
-                    "group": "operation"
-                },
-                {
-                    "command": "favorites.alias.modify",
-                    "when": "viewItem == FAVORITE_DIRECTORY",
-                    "group": "operation"
-                },
-                {
-                    "command": "favorites.alias.remove",
-                    "when": "viewItem == FAVORITE_FILE",
-                    "group": "operation"
-                },
-                {
-                    "command": "favorites.alias.remove",
-                    "when": "viewItem == FAVORITE_DIRECTORY",
-                    "group": "operation"
-                },
                 {
                     "command": "favorites.group.delete",
                     "when": "viewItem == FAVORITE_GROUP",
@@ -523,14 +493,39 @@
                     "group": "8_copyNameOrPath"
                 },
                 {
-                    "command": "favorites.set.highlight",
-                    "when": "viewItem == FAVORITE_FILE || viewItem == FAVORITE_DIRECTORY || viewItem == FAVORITE_URL",
-                    "group": "6_modification"
+                    "command": "favorites.set.badge",
+                    "when": "viewItem == FAVORITE_FILE || viewItem == FAVORITE_DIRECTORY || viewItem == FAVORITE_URL || viewItem == FAVORITE_GROUP",
+                    "group": "5_set@1"
                 },
                 {
-                    "command": "favorites.set.badge",
+                    "command": "favorites.set.highlight",
+                    "when": "viewItem == FAVORITE_FILE || viewItem == FAVORITE_DIRECTORY || viewItem == FAVORITE_URL || viewItem == FAVORITE_GROUP",
+                    "group": "5_set@2"
+                },
+                {
+                    "command": "favorites.alias.modify",
+                    "when": "viewItem == FAVORITE_FILE || viewItem == FAVORITE_DIRECTORY",
+                    "group": "5_set@3"
+                },
+                {
+                    "command": "favorites.remove.badge",
+                    "when": "viewItem == FAVORITE_FILE || viewItem == FAVORITE_DIRECTORY || viewItem == FAVORITE_URL || viewItem == FAVORITE_GROUP",
+                    "group": "6_remove@1"
+                },
+                {
+                    "command": "favorites.remove.highlight",
+                    "when": "viewItem == FAVORITE_FILE || viewItem == FAVORITE_DIRECTORY || viewItem == FAVORITE_URL || viewItem == FAVORITE_GROUP",
+                    "group": "6_remove@2"
+                },
+                {
+                    "command": "favorites.alias.remove",
+                    "when": "viewItem == FAVORITE_FILE || viewItem == FAVORITE_DIRECTORY",
+                    "group": "6_remove@3"
+                },
+                {
+                    "command": "favorites.deleteFavorite",
                     "when": "viewItem == FAVORITE_FILE || viewItem == FAVORITE_DIRECTORY || viewItem == FAVORITE_URL",
-                    "group": "6_modification"
+                    "group": "7_delete"
                 }
             ]
         },
@@ -601,11 +596,11 @@
             },
             {
                 "command": "favorites.alias.modify",
-                "title": "Modify alias"
+                "title": "Set Alias"
             },
             {
                 "command": "favorites.alias.remove",
-                "title": "Remove alias"
+                "title": "Remove Alias"
             },
             {
                 "command": "favorites.group.create",
@@ -716,6 +711,16 @@
             {
                 "command": "favorites.set.badge",
                 "title": "Set Badge",
+                "category": "Favorites"
+            },
+            {
+                "command": "favorites.remove.highlight",
+                "title": "Remove Highlight Color",
+                "category": "Favorites"
+            },
+            {
+                "command": "favorites.remove.badge",
+                "title": "Remove Badge",
                 "category": "Favorites"
             }
         ]

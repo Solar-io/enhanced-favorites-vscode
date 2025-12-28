@@ -18,6 +18,12 @@
   - Add optional 2-character badges to favorites
   - Colors appear as text decoration in the tree view
 
+- **Drag-and-Drop Reordering**: Manually arrange favorites in any order
+  - Drag items to reorder within a group or at root level
+  - Drag items between groups to move them
+  - Drag items onto a group to move them into that group
+  - Manual order is preserved (overrides alphabetical sorting when set)
+
 ### Technical Changes
 - Forked from kdcro101/vscode-favorites
 - Updated to modern VS Code extension APIs
