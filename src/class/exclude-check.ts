@@ -1,5 +1,5 @@
 //
-import * as minimatch from "minimatch";
+import minimatch from "minimatch";
 import { Workspace } from "./workspace";
 
 export class ExcludeCheck {

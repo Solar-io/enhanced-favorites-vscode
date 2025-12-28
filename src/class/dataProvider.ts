@@ -17,7 +17,7 @@ export class DataProvider implements vscode.TreeDataProvider<ViewItem> {
         return this.browser.getParent(item);
     }
     public refresh(): void {
-        this.onDidChangeTreeDataEmmiter.fire();
+        this.onDidChangeTreeDataEmmiter.fire(undefined);
     }
     public getTreeItem(item: ViewItem): vscode.TreeItem {
         return item;

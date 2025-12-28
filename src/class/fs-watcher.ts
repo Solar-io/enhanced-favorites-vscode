@@ -15,7 +15,7 @@ export class FsWatcher {
     constructor(private storage: FavoriteStorage) {
 
         this.watcher = vscode.workspace.createFileSystemWatcher("**/*.*", false, false, false);
-        merge<FileSystemEvent>(
+        merge(
             fromEventPattern<vscode.Uri>((f) => {
                 return this.watcher.onDidCreate(f as any);
             }, (f: any, d: vscode.Disposable) => {
@@ -48,7 +48,7 @@ export class FsWatcher {
             })),
         ).pipe(
             takeUntil(Global.eventDeactivate),
-            filter((e) => e.fsPath !== this.storage.storageFilePath),
+            filter((e: FileSystemEvent) => e.fsPath !== this.storage.storageFilePath),
             debounceTime(1000),
             catchError((e, o) => o),
         ).subscribe((e) => {

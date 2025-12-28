@@ -1,3 +1,33 @@
+## 3.0.0 | 2024/12/28
+
+**Enhanced Favorites** - Major update with new features and Remote Development support.
+
+### New Features
+- **Remote Development Fix**: Copy Path now works correctly in Remote SSH, WSL, and Codespaces
+  - Uses VS Code's native clipboard API instead of system clipboard (`clipboardy`)
+  - Paths are copied to your local clipboard, not the remote machine's clipboard
+
+- **URL Favorites**: Add URL bookmarks to your favorites tree
+  - URLs open in your default browser when clicked
+  - Add URLs via context menu: "Add URL to favorites"
+  - Add URLs directly from clipboard: "Add URL from clipboard"
+  - URLs display with a globe icon for easy identification
+
+- **Color Highlighting**: Set highlight colors on any favorite item
+  - Choose from: red, orange, yellow, green, blue, purple
+  - Add optional 2-character badges to favorites
+  - Colors appear as text decoration in the tree view
+
+### Technical Changes
+- Forked from kdcro101/vscode-favorites
+- Updated to modern VS Code extension APIs
+- Removed deprecated `vscode` npm package
+- Removed `clipboardy` dependency (incompatible with Remote Development)
+- Updated dependencies for security fixes
+- Minimum VS Code version: 1.75.0
+
+---
+
 ## 2.4.6 | 2022/09/15
 
 - enabled the "Add to Favorites" and "Add to Favorites Group" context menu items in additional context menus such as when right clicking an open file tab, or in the text of an open editor. 

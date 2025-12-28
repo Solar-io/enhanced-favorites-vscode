@@ -1,7 +1,7 @@
-import * as Color from "color";
+import Color from "color";
 import * as fs from "fs-extra";
 import * as colors from "html-colors";
-import * as md5 from "md5";
+import md5 from "md5";
 import * as path from "path";
 import { ExtensionContext } from "vscode";
 import { HtmlColor } from "../types";
@@ -35,7 +35,7 @@ export class GroupColor {
         return p;
     }
     public setColor(id: string, colorDef: string) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
 
             const isColor = this.isColor(colorDef);
             if (!isColor) {
@@ -82,7 +82,7 @@ export class GroupColor {
         return this.groupIconRemove(id);
     }
     private groupIconRemove(id: string) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
 
             Promise.all([
                 this.favorites.get(),
@@ -108,7 +108,7 @@ export class GroupColor {
         });
     }
     private groupIconSet(id: string, normalizedColor: string) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
 
             Promise.all([
                 this.favorites.get(),

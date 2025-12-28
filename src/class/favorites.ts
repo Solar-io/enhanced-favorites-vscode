@@ -25,7 +25,7 @@ export class Favorites {
     }
 
     public updateWithPath(id: string, absPath: string): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             Promise.all([
                 this.get(),
             ]).then((results) => {
@@ -48,7 +48,7 @@ export class Favorites {
         });
     }
     public duplicateWithPath(id: string, absPath: string): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             Promise.all([
                 this.get(),
             ]).then((results) => {
@@ -76,7 +76,7 @@ export class Favorites {
         });
     }
     public generateGroupQuickPickList(): Promise<GroupQuickPick[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise<GroupQuickPick[]>((resolve, reject) => {
 
             const out: GroupQuickPick[] = [];
 
@@ -148,7 +148,7 @@ export class Favorites {
             });
     }
     public addExternalPathToGroup(groupId: string, itemPath: string) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
 
             let all: StoredResource[] = null;
             Promise.all([
@@ -187,7 +187,7 @@ export class Favorites {
         });
     }
     public addPathToGroup(groupId: string, itemPath: string) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
 
             let all: StoredResource[] = null;
             Promise.all([
@@ -232,7 +232,7 @@ export class Favorites {
         });
     }
     public labelModify(id: string, name: string) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
 
             Promise.all([
                 this.get(),
@@ -254,7 +254,7 @@ export class Favorites {
         });
     }
     public groupRename(id: string, name: string) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
 
             Promise.all([
                 this.get(),
@@ -276,7 +276,7 @@ export class Favorites {
         });
     }
     public addGroup(parent_id: string, name: string) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
 
             Promise.all([
                 this.get(),
@@ -296,7 +296,7 @@ export class Favorites {
         });
     }
     public get(): Promise<StoredResource[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise<StoredResource[]>((resolve, reject) => {
 
             from(this.storage.get()).pipe(
                 tap((list) => this.stateList.next(list)),
@@ -314,7 +314,7 @@ export class Favorites {
         return this.storage.save(list);
     }
     public identify(itemPath: string): Promise<ResourceType> {
-        return new Promise((resolve, reject) => {
+        return new Promise<ResourceType>((resolve, reject) => {
             fs.stat(workspace.pathResolve(itemPath), (err, stat: fs.Stats) => {
 
                 if (err) {
@@ -343,7 +343,7 @@ export class Favorites {
 
         const parentId = parentItem == null ? null : parentItem.id;
 
-        return new Promise((resolve, reject) => {
+        return new Promise<ViewItem[]>((resolve, reject) => {
             Promise.all([
                 this.get(),
             ]).then((result) => {
@@ -378,7 +378,7 @@ export class Favorites {
         });
     }
     public sortStoredResources(list: StoredResource[]): Promise<StoredResource[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise<StoredResource[]>((resolve, reject) => {
             try {
 
                 const dirs = list.filter((i) => i.type === ResourceType.Directory);
@@ -440,7 +440,7 @@ export class Favorites {
     }
 
     public viewItemForPath(fsPath: string): Promise<ViewItem> {
-        return new Promise((resolve, reject) => {
+        return new Promise<ViewItem>((resolve, reject) => {
             const enablePreview = vscode.workspace.getConfiguration("workbench.editor").get("enablePreview") as boolean;
             Promise.all([this.identify(fsPath)])
                 .then((result) => {
@@ -605,7 +605,7 @@ export class Favorites {
                     "FAVORITE_URL",
                     i.url,
                     i.type,
-                    new vscode.ThemeIcon("globe"),
+                    new vscode.ThemeIcon("globe") as any,
                     {
                         command: "favorites.open.url",
                         title: "Open URL",
@@ -623,7 +623,7 @@ export class Favorites {
     }
 
     public isPartOfFavorites(fsPath: string): Promise<boolean> {
-        return new Promise((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
 
             if (!fsPath) {
                 resolve(false);
@@ -744,7 +744,7 @@ export class Favorites {
     }
 
     public addResource(resource: StoredResource): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             this.get()
                 .then((list) => {
                     list.push(resource);
@@ -760,7 +760,7 @@ export class Favorites {
     }
 
     public updateResource(id: string, updates: Partial<StoredResource>): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             this.get()
                 .then((list) => {
                     const index = list.findIndex(r => r.id === id);

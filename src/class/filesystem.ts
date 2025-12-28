@@ -15,7 +15,7 @@ export class FilesystemUtils {
     }
     public duplicate(item: ViewItem) {
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             const isFav = item.isFavorite;
             const aPath = item.value;
             const base = path.basename(aPath);
@@ -59,7 +59,7 @@ export class FilesystemUtils {
         });
     }
     public delete(item: ViewItem) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             const useTrash = workspace.get("useTrash") as boolean;
             const aPath = item.value;
             const base = path.basename(aPath);
@@ -87,7 +87,7 @@ export class FilesystemUtils {
         });
     }
     public deletePermanently(item: ViewItem) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
 
             const isFav = item.isFavorite;
             const aPath = item.value;
@@ -105,8 +105,8 @@ export class FilesystemUtils {
         });
 
     }
-    public deleteToTrash(item: ViewItem): Promise<boolean> {
-        return new Promise((resolve, reject) => {
+    public deleteToTrash(item: ViewItem): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
             const isFav = item.isFavorite;
             const resourcePath = item.value;
             const base = path.basename(resourcePath);
@@ -146,7 +146,7 @@ export class FilesystemUtils {
         });
     }
     public rename(item: ViewItem) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             const isFav = item.isFavorite;
             const aPath = item.value;
             const base = path.basename(aPath);
@@ -183,7 +183,7 @@ export class FilesystemUtils {
         });
     }
     public createFile(item: ViewItem) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             const aPath = item.value;
             let newPath: string = null;
             let newName: string = null;
@@ -226,7 +226,7 @@ export class FilesystemUtils {
         });
     }
     public createDirectory(item: ViewItem) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             const aPath = item.value;
             let newPath: string = null;
             let newName: string = null;
@@ -264,7 +264,7 @@ export class FilesystemUtils {
         });
     }
     public copy(clipboardItem: ViewItem, destination: ViewItem) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             const sPath = clipboardItem.value;
             const sBase = path.basename(clipboardItem.value);
             const dDir = destination.value;
@@ -308,7 +308,7 @@ export class FilesystemUtils {
     }
     public move(clipboardItem: ViewItem, destination: ViewItem) {
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             const isFav = clipboardItem.isFavorite;
             const sPath = clipboardItem.value;
             const sBase = path.basename(clipboardItem.value);

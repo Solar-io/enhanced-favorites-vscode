@@ -1,7 +1,9 @@
 out
+dist
 packed
 node_modules
 .DS_Store
 promo/**
 svg-generated/**
 .favorites.json
+logs/

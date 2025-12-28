@@ -11,7 +11,7 @@ export class FavoritesBrowser {
 
     }
     public getChildren(item: ViewItem): Promise<ViewItem[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise<ViewItem[]>((resolve, reject) => {
 
             if (!item) {
                 this.favorites.groupViewItems(null)
@@ -56,7 +56,7 @@ export class FavoritesBrowser {
         return item.getParent();
     }
     private getDirectoryItems(parentItem: ViewItem): Promise<ViewItem[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise<ViewItem[]>((resolve, reject) => {
             const fsPath = parentItem.resourceName;
             const sortDirection = workspace.get("sortDirection");
 

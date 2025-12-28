@@ -39,7 +39,7 @@ export class ViewItem extends vscode.TreeItem {
         }
 
         this.tooltip = tooltipText || value;
-        this.iconPath = icon;
+        this.iconPath = icon as any;
     }
     public get isFavorite() {
         return this.contextValue === "FAVORITE_DIRECTORY" || this.contextValue === "FAVORITE_FILE";
@@ -60,7 +60,7 @@ export class ViewItem extends vscode.TreeItem {
 
         }
 
-        return new Promise((resolve, reject) => {
+        return new Promise<ViewItem>((resolve, reject) => {
 
             ViewItem.favorites.get()
                 .then((stored) => {
@@ -95,7 +95,7 @@ export class ViewItem extends vscode.TreeItem {
         });
     }
     private getParentForFs(fsPath: string): Promise<ViewItem> {
-        return new Promise((resolve, reject) => {
+        return new Promise<ViewItem>((resolve, reject) => {
             ViewItem.favorites.stateList.pipe(
                 take(1),
             ).subscribe((list) => {
@@ -118,7 +118,7 @@ export class ViewItem extends vscode.TreeItem {
         });
     }
     private getParentForFavorite(parentId: string): Promise<ViewItem> {
-        return new Promise((resolve, reject) => {
+        return new Promise<ViewItem>((resolve, reject) => {
             ViewItem.favorites.stateList.pipe(
                 take(1),
             ).subscribe((list) => {

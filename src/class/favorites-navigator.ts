@@ -19,7 +19,7 @@ export class FavoritesNavigator {
     }
 
     public build(item: ViewItem): Promise<FavoritesNavigatorQuickPickItem[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise<FavoritesNavigatorQuickPickItem[]>((resolve, reject) => {
 
             from(Promise.all([
                 this.browser.getChildren(item),

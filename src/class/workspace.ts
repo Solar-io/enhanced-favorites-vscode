@@ -28,7 +28,7 @@ export class Workspace {
 
     public get<T extends keyof WorkspaceConfiguration>(key: T): WorkspaceConfiguration[T] {
         const config = vscode.workspace.getConfiguration("favorites");
-        return config.get(key) as T;
+        return config.get(key) as WorkspaceConfiguration[T];
     }
     public getGlobal(key: string): any {
         const config = vscode.workspace.getConfiguration();

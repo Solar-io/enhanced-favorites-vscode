@@ -24,7 +24,7 @@ export class FavoriteStorage {
         this.storageFilePath = path.join(workspace.getConfigurationRoot(), execRelativePath);
     }
     public get(): Promise<StoredResource[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise<StoredResource[]>((resolve, reject) => {
 
             if (!fs.existsSync(this.storageFilePath)) {
                 resolve([]);
@@ -52,7 +52,7 @@ export class FavoriteStorage {
         return out;
     }
     public save(list: StoredResource[], triggerChange: boolean = true): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
 
             const data = !list ? [] : list;
 
@@ -85,7 +85,7 @@ export class FavoriteStorage {
         });
     }
     private ___fixItems(list: StoredResource[]): Promise<StoredResource[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise<StoredResource[]>((resolve, reject) => {
 
             const result = list.map((item) => {
 
