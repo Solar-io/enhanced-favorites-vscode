@@ -1,0 +1,679 @@
+{
+    "name": "favorites",
+    "displayName": "Favorites",
+    "description": "Add files and directories to workspace favorites. Create groups of directories and files. Time saver for complex projects.",
+    "version": "2.4.6",
+    "categories": [
+        "Other"
+    ],
+    "keywords": [
+        "bookmarks",
+        "favorites",
+        "groups",
+        "favorite files",
+        "favorite directories"
+    ],
+    "publisher": "kdcro101",
+    "engines": {
+        "vscode": "^1.29.0"
+    },
+    "galleryBanner": {
+        "color": "#283593",
+        "theme": "dark"
+    },
+    "scripts": {
+        "vscode:prepublish": "webpack --mode production",
+        "webpack": "webpack --mode development",
+        "webpack-dev": "webpack --mode development --watch",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "icon": "icons/favorites.png",
+    "bugs": {
+        "url": "https://github.com/kdcro101/vscode-favorites/issues"
+    },
+    "homepage": "https://github.com/kdcro101/vscode-favorites/blob/master/README.md",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kdcro101/vscode-favorites.git"
+    },
+    "activationEvents": [
+        "*"
+    ],
+    "license": "GPL-3.0",
+    "main": "./packed/",
+    "contributes": {
+        "keybindings": [
+            {
+                "command": "workbench.view.extension.favorites-explorer",
+                "key": "ctrl+alt+f",
+                "mac": "cmd+alt+f",
+                "when": "editorTextFocus"
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Favorite-items configuration",
+            "properties": {
+                "favorites.useTrash": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Move to trash when resource gets deleted"
+                },
+                "favorites.useWorkspace": {
+                    "type": "number",
+                    "default": 0,
+                    "description": "Index of workspace where to look for storage file"
+                },
+                "favorites.useFilesExclude": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Should 'files.exclude' setting be used "
+                },
+                "favorites.storageFilePath": {
+                    "type": "string",
+                    "default": ".favorites.json",
+                    "description": "Storage file path relative to workspace"
+                },
+                "favorites.storageRegistry": {
+                    "type": "array",
+                    "default": [],
+                    "description": "List of alternative storage paths relative to workspace",
+                    "items": {
+                        "type": "string",
+                        "title": "Path",
+                        "description": "Path to alternative storage .json file"
+                    }
+                },
+                "favorites.groupsFirst": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Display favorite groups before (above) favorite files and directories"
+                },
+                "favorites.sortDirection": {
+                    "type": "string",
+                    "enum": [
+                        "ASC",
+                        "DESC"
+                    ],
+                    "default": "ASC",
+                    "description": "Specify an order for all favorites"
+                },
+                "favorites.includeInDocumentBodyContextMenu": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Display the 'Favorites: Add to * favorites' commands in the editor context menu"
+                },
+                "favorites.includeInEditorTabContextMenu": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Display the 'Favorites: Add to * favorites' commands in the context menu for the tab of a specific file"
+                }
+            }
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "favorites-explorer",
+                    "title": "Favorites",
+                    "icon": "icons/activity_bar_icon.svg"
+                }
+            ]
+        },
+        "views": {
+            "favorites-explorer": [
+                {
+                    "id": "favoritesActivity",
+                    "name": "Explorer"
+                }
+            ],
+            "explorer": [
+                {
+                    "id": "favorites",
+                    "name": "Favorites"
+                }
+            ]
+        },
+        "menus": {
+            "explorer/context": [
+                {
+                    "command": "favorites.addToFavorites",
+                    "group": "favorites"
+                },
+                {
+                    "command": "favorites.addToFavoritesGroup",
+                    "group": "favorites"
+                }
+            ],
+            "editor/title": [
+                {
+                    "command": "favorites.addToFavorites",
+                    "group": "favorites"
+                },
+                {
+                    "command": "favorites.addToFavoritesGroup",
+                    "group": "favorites"
+                }
+            ],
+            "editor/title/context": [
+                {
+                    "when": "config.favorites.includeInEditorTabContextMenu",
+                    "command": "favorites.addToFavorites",
+                    "group": "favorites"
+                },
+                {
+                    "when": "config.favorites.includeInEditorTabContextMenu",
+                    "command": "favorites.addToFavoritesGroup",
+                    "group": "favorites"
+                }
+            ],
+            "editor/context": [
+                {
+                    "when": "config.favorites.includeInDocumentBodyContextMenu && resourceScheme == file",
+                    "command": "favorites.addFileToFavorites",
+                    "group": "favorites"
+                },
+                {
+                    "when": "config.favorites.includeInDocumentBodyContextMenu && resourceScheme == file",
+                    "command": "favorites.addFileToFavoritesGroup",
+                    "group": "favorites"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "favorites.collapse",
+                    "when": "view == favorites",
+                    "group": "navigation@4"
+                },
+                {
+                    "command": "favorites.refresh",
+                    "when": "view == favorites",
+                    "group": "navigation@3"
+                },
+                {
+                    "command": "favorites.nav.sort.az",
+                    "when": "view == favorites && sort==DESC",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "favorites.nav.sort.za",
+                    "when": "view == favorites && sort==ASC",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "favorites.group.create",
+                    "when": "view == favorites",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "favorites.delete.all",
+                    "when": "view == favorites",
+                    "group": "navigation@0"
+                },
+                {
+                    "command": "favorites.collapse.activity",
+                    "when": "view == favoritesActivity",
+                    "group": "navigation@4"
+                },
+                {
+                    "command": "favorites.refresh",
+                    "when": "view == favoritesActivity",
+                    "group": "navigation@3"
+                },
+                {
+                    "command": "favorites.nav.sort.az",
+                    "when": "view == favoritesActivity && sort==DESC",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "favorites.nav.sort.za",
+                    "when": "view == favoritesActivity && sort==ASC",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "favorites.group.create",
+                    "when": "view == favoritesActivity",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "favorites.delete.all",
+                    "when": "view == favoritesActivity",
+                    "group": "navigation@0"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "favorites.deleteFavorite",
+                    "when": "viewItem == FAVORITE_FILE",
+                    "group": "operation"
+                },
+                {
+                    "command": "favorites.deleteFavorite",
+                    "when": "viewItem == FAVORITE_DIRECTORY",
+                    "group": "operation"
+                },
+                {
+                    "command": "favorites.alias.modify",
+                    "when": "viewItem == FAVORITE_FILE",
+                    "group": "operation"
+                },
+                {
+                    "command": "favorites.alias.modify",
+                    "when": "viewItem == FAVORITE_DIRECTORY",
+                    "group": "operation"
+                },
+                {
+                    "command": "favorites.alias.remove",
+                    "when": "viewItem == FAVORITE_FILE",
+                    "group": "operation"
+                },
+                {
+                    "command": "favorites.alias.remove",
+                    "when": "viewItem == FAVORITE_DIRECTORY",
+                    "group": "operation"
+                },
+                {
+                    "command": "favorites.group.delete",
+                    "when": "viewItem == FAVORITE_GROUP",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "favorites.group.rename",
+                    "when": "viewItem == FAVORITE_GROUP",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "favorites.group.color.set",
+                    "when": "viewItem == FAVORITE_GROUP",
+                    "group": "6_modification"
+                },
+                {
+                    "command": "favorites.group.create",
+                    "when": "viewItem == FAVORITE_GROUP",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "favorites.group.create",
+                    "when": "view == favoritesActivity && viewItem != FAVORITE_GROUP && viewItem != FAVORITE_DIRECTORY && viewItem != FAVORITE_FILE && viewItem != FS_FILE && viewItem != FS_DIRECTORY",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "favorites.group.create",
+                    "when": "view == favorites && viewItem != FAVORITE_GROUP && viewItem != FAVORITE_DIRECTORY && viewItem != FAVORITE_FILE && viewItem != FS_FILE && viewItem != FS_DIRECTORY",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "filesystem.create.file",
+                    "when": "viewItem == FS_DIRECTORY",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "filesystem.create.directory",
+                    "when": "viewItem == FS_DIRECTORY",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "filesystem.duplicate",
+                    "when": "viewItem == FS_DIRECTORY",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "filesystem.copy",
+                    "when": "viewItem == FS_DIRECTORY",
+                    "group": "9_cutcopypaste"
+                },
+                {
+                    "command": "filesystem.cut",
+                    "when": "viewItem == FS_DIRECTORY",
+                    "group": "9_cutcopypaste"
+                },
+                {
+                    "command": "filesystem.paste",
+                    "when": "viewItem == FS_DIRECTORY && clipboard == true",
+                    "group": "9_cutcopypaste"
+                },
+                {
+                    "command": "filesystem.delete",
+                    "when": "viewItem == FS_DIRECTORY",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "filesystem.rename",
+                    "when": "viewItem == FS_DIRECTORY",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "filesystem.duplicate",
+                    "when": "viewItem == FS_FILE",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "filesystem.copy",
+                    "when": "viewItem == FS_FILE",
+                    "group": "9_cutcopypaste"
+                },
+                {
+                    "command": "filesystem.cut",
+                    "when": "viewItem == FS_FILE",
+                    "group": "9_cutcopypaste"
+                },
+                {
+                    "command": "filesystem.delete",
+                    "when": "viewItem == FS_FILE",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "filesystem.rename",
+                    "when": "viewItem == FS_FILE",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "filesystem.duplicate",
+                    "when": "viewItem == FAVORITE_FILE",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "filesystem.copy",
+                    "when": "viewItem == FAVORITE_FILE",
+                    "group": "9_cutcopypaste"
+                },
+                {
+                    "command": "filesystem.cut",
+                    "when": "viewItem == FAVORITE_FILE",
+                    "group": "9_cutcopypaste"
+                },
+                {
+                    "command": "filesystem.delete",
+                    "when": "viewItem == FAVORITE_FILE",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "filesystem.rename",
+                    "when": "viewItem == FAVORITE_FILE",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "filesystem.create.file",
+                    "when": "viewItem == FAVORITE_DIRECTORY",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "filesystem.create.directory",
+                    "when": "viewItem == FAVORITE_DIRECTORY",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "filesystem.duplicate",
+                    "when": "viewItem == FAVORITE_DIRECTORY",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "filesystem.copy",
+                    "when": "viewItem == FAVORITE_DIRECTORY",
+                    "group": "9_cutcopypaste"
+                },
+                {
+                    "command": "filesystem.cut",
+                    "when": "viewItem == FAVORITE_DIRECTORY",
+                    "group": "9_cutcopypaste"
+                },
+                {
+                    "command": "filesystem.paste",
+                    "when": "viewItem == FAVORITE_DIRECTORY && clipboard == true",
+                    "group": "9_cutcopypaste"
+                },
+                {
+                    "command": "filesystem.delete",
+                    "when": "viewItem == FAVORITE_DIRECTORY",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "filesystem.rename",
+                    "when": "viewItem == FAVORITE_DIRECTORY",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "favorites.addExternal",
+                    "when": "view == favoritesActivity && viewItem != FAVORITE_DIRECTORY && viewItem != FAVORITE_FILE && viewItem != FS_FILE && viewItem != FS_DIRECTORY",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "favorites.addExternal",
+                    "when": "view == favorites && viewItem != FAVORITE_DIRECTORY && viewItem != FAVORITE_FILE && viewItem != FS_FILE && viewItem != FS_DIRECTORY",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "favorites.copy.path",
+                    "when": "viewItem == FAVORITE_FILE",
+                    "group": "8_copyNameOrPath"
+                },
+                {
+                    "command": "favorites.copy.path",
+                    "when": "viewItem == FS_FILE",
+                    "group": "8_copyNameOrPath"
+                },
+                {
+                    "command": "favorites.copy.path",
+                    "when": "viewItem == FAVORITE_DIRECTORY",
+                    "group": "8_copyNameOrPath"
+                },
+                {
+                    "command": "favorites.copy.path",
+                    "when": "viewItem == FS_DIRECTORY",
+                    "group": "8_copyNameOrPath"
+                },
+                {
+                    "command": "favorites.copy.name",
+                    "when": "viewItem == FAVORITE_FILE",
+                    "group": "8_copyNameOrPath"
+                },
+                {
+                    "command": "favorites.copy.name",
+                    "when": "viewItem == FS_FILE",
+                    "group": "8_copyNameOrPath"
+                },
+                {
+                    "command": "favorites.copy.name",
+                    "when": "viewItem == FAVORITE_DIRECTORY",
+                    "group": "8_copyNameOrPath"
+                },
+                {
+                    "command": "favorites.copy.name",
+                    "when": "viewItem == FS_DIRECTORY",
+                    "group": "8_copyNameOrPath"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "favorites.selectWorkspace",
+                "title": "Favorites: Select Workspace for Favorites"
+            },
+            {
+                "command": "favorites.selectFromRegistry",
+                "title": "Favorites: Select alternative storage from registry"
+            },
+            {
+                "command": "favorites.nav.sort.az",
+                "title": "Sort ascending",
+                "icon": {
+                    "dark": "images/sort_dark_za.svg",
+                    "light": "images/sort_light_za.svg"
+                }
+            },
+            {
+                "command": "favorites.nav.sort.za",
+                "title": "Sort descending",
+                "icon": {
+                    "dark": "images/sort_dark_az.svg",
+                    "light": "images/sort_light_az.svg"
+                }
+            },
+            {
+                "command": "favorites.collapse",
+                "title": "Collapse all",
+                "icon": {
+                    "dark": "images/collapse_dark.svg",
+                    "light": "images/collapse_light.svg"
+                }
+            },
+            {
+                "command": "favorites.collapse.activity",
+                "title": "Collapse all",
+                "icon": {
+                    "dark": "images/collapse_dark.svg",
+                    "light": "images/collapse_light.svg"
+                }
+            },
+            {
+                "command": "favorites.addToFavorites",
+                "title": "Favorites: Add to favorites"
+            },
+            {
+                "command": "favorites.addToFavoritesGroup",
+                "title": "Favorites: Add to group of favorites"
+            },
+            {
+                "command": "favorites.addFileToFavorites",
+                "title": "Favorites: Add file to favorites"
+            },
+            {
+                "command": "favorites.addFileToFavoritesGroup",
+                "title": "Favorites: Add file to group of favorites"
+            },
+            {
+                "command": "favorites.deleteFavorite",
+                "title": "Remove from favorites"
+            },
+            {
+                "command": "favorites.group.rename",
+                "title": "Rename group"
+            },
+            {
+                "command": "favorites.alias.modify",
+                "title": "Modify alias"
+            },
+            {
+                "command": "favorites.alias.remove",
+                "title": "Remove alias"
+            },
+            {
+                "command": "favorites.group.create",
+                "title": "Create group",
+                "icon": {
+                    "dark": "images/add_dark.svg",
+                    "light": "images/add_light.svg"
+                }
+            },
+            {
+                "command": "favorites.delete.all",
+                "title": "Remove everything from favorites",
+                "icon": {
+                    "dark": "images/delete_all_dark.svg",
+                    "light": "images/delete_all_light.svg"
+                }
+            },
+            {
+                "command": "favorites.refresh",
+                "title": "Refresh list",
+                "icon": {
+                    "dark": "images/refresh_dark.svg",
+                    "light": "images/refresh_light.svg"
+                }
+            },
+            {
+                "command": "favorites.group.delete",
+                "title": "Remove group"
+            },
+            {
+                "command": "favorites.group.color.set",
+                "title": "Group color"
+            },
+            {
+                "command": "filesystem.create.file",
+                "title": "Create file"
+            },
+            {
+                "command": "filesystem.create.directory",
+                "title": "Create directory"
+            },
+            {
+                "command": "filesystem.copy",
+                "title": "Copy"
+            },
+            {
+                "command": "filesystem.cut",
+                "title": "Cut"
+            },
+            {
+                "command": "filesystem.paste",
+                "title": "Paste"
+            },
+            {
+                "command": "filesystem.delete",
+                "title": "Delete"
+            },
+            {
+                "command": "filesystem.rename",
+                "title": "Rename"
+            },
+            {
+                "command": "filesystem.duplicate",
+                "title": "Duplicate"
+            },
+            {
+                "command": "favorites.addExternal",
+                "title": "Add external resource"
+            },
+            {
+                "command": "favorites.copy.path",
+                "title": "Copy Path"
+            },
+            {
+                "command": "favorites.copy.name",
+                "title": "Copy Name"
+            },
+            {
+                "command": "favorites.browse",
+                "title": "Favorites: Browse"
+            }
+        ]
+    },
+    "devDependencies": {
+        "@types/clipboardy": "^1.1.0",
+        "@types/color": "^3.0.0",
+        "@types/fs-extra": "^5.0.2",
+        "@types/lodash": "^4.14.108",
+        "@types/lodash-es": "^4.17.0",
+        "@types/md5": "^2.1.32",
+        "@types/minimatch": "^3.0.3",
+        "@types/nconf": "0.0.37",
+        "@types/node": "^9.4.7",
+        "del": "^3.0.0",
+        "gulp": "^3.9.1",
+        "gulp-rename": "^1.2.2",
+        "ts-loader": "^5.3.0",
+        "tslint": "^5.9.1",
+        "typescript": "^2.7.2",
+        "vscode": "^1.1.13",
+        "vscode-nls-dev": "^2.1.6",
+        "webpack": "^4.25.1",
+        "webpack-cli": "^3.1.2"
+    },
+    "dependencies": {
+        "clipboardy": "^1.2.3",
+        "color": "^3.0.0",
+        "cryptiles": "^4.1.2",
+        "fs-extra": "^7.0.0",
+        "gulp-remote-src-vscode": "^0.5.1",
+        "html-colors": "0.0.6",
+        "lodash": "^4.17.5",
+        "lodash-es": "^4.17.10",
+        "md5": "^2.2.1",
+        "minimatch": "^3.0.4",
+        "nconf": "^0.10.0",
+        "rxjs": "^6.2.2",
+        "spawn-sync": "^2.0.0",
+        "trash": "^4.3.0",
+        "url-parse": "^1.4.3"
+    }
+}

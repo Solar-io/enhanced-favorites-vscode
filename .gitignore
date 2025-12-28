@@ -1,0 +1,7 @@
+out
+packed
+node_modules
+.DS_Store
+promo/**
+svg-generated/**
+.favorites.json
