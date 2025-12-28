@@ -4,8 +4,9 @@ import { take } from "rxjs/operators";
 import * as vscode from "vscode";
 import { ResourceType } from "../types/index";
 import { Favorites } from "./favorites";
+import { FavoritesDecorationProvider } from "./item-decoration";
 
-export type ViewItemContextValue = "FAVORITE_GROUP" | "FAVORITE_DIRECTORY" | "FAVORITE_FILE" | "FS_DIRECTORY" | "FS_FILE";
+export type ViewItemContextValue = "FAVORITE_GROUP" | "FAVORITE_DIRECTORY" | "FAVORITE_FILE" | "FAVORITE_URL" | "FS_DIRECTORY" | "FS_FILE";
 
 export class ViewItem extends vscode.TreeItem {
     public static favorites: Favorites;
@@ -30,10 +31,15 @@ export class ViewItem extends vscode.TreeItem {
     ) {
         super(label, collapsibleState);
 
-        this.resourceUri = vscode.Uri.file(value);
-        this.tooltip = value;
+        // Use favorites:// scheme for decoration support if item has an ID
+        if (this.id) {
+            this.resourceUri = FavoritesDecorationProvider.createUri(this.id);
+        } else {
+            this.resourceUri = vscode.Uri.file(value);
+        }
+
+        this.tooltip = tooltipText || value;
         this.iconPath = icon;
-        this.tooltip = tooltipText;
     }
     public get isFavorite() {
         return this.contextValue === "FAVORITE_DIRECTORY" || this.contextValue === "FAVORITE_FILE";

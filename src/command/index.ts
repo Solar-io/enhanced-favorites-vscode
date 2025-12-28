@@ -1,4 +1,3 @@
-import * as clipboardy from "clipboardy";
 import * as path from "path";
 import { of } from "rxjs";
 import { concatMap } from "rxjs/operators";
@@ -13,11 +12,15 @@ import { FavoriteStorage } from "../class/storage";
 import { ViewItem } from "../class/view-item";
 import workspace from "../class/workspace";
 import { RegistryQuickPickItem, ResourceType, TreeProviders, WorkspaceQuickPickItem } from "../types/index";
+import { UrlFavorites } from "../class/url-favorites";
+import { FavoritesDecorationProvider } from "../class/item-decoration";
 
 export class Commands {
     private clipboard = new Clipboard();
     private filesystem: FilesystemUtils = null;
     private groupColor: GroupColor = null;
+    private urlFavorites: UrlFavorites = null;
+    private decorationProvider: FavoritesDecorationProvider = null;
 
     constructor(
         private context: vscode.ExtensionContext,
@@ -28,6 +31,11 @@ export class Commands {
 
         this.filesystem = new FilesystemUtils(favorites);
         this.groupColor = new GroupColor(favorites, context);
+        this.urlFavorites = new UrlFavorites(favorites);
+        this.decorationProvider = new FavoritesDecorationProvider(favorites);
+        context.subscriptions.push(
+            vscode.window.registerFileDecorationProvider(this.decorationProvider)
+        );
 
         context.subscriptions.push(this.selectRegistryItem());
         context.subscriptions.push(this.favoritesRefresh());
@@ -61,6 +69,12 @@ export class Commands {
         context.subscriptions.push(this.fsRename());
         context.subscriptions.push(this.groupColorSet());
         context.subscriptions.push(this.favoritesBrowse());
+        context.subscriptions.push(this.addUrlFavorite());
+        context.subscriptions.push(this.addUrlFromClipboard());
+        context.subscriptions.push(this.openUrl());
+        context.subscriptions.push(this.copyUrl());
+        context.subscriptions.push(this.setHighlightColor());
+        context.subscriptions.push(this.setBadge());
     }
     public favoritesBrowse = () => {
         return vscode.commands.registerCommand("favorites.browse",
@@ -196,30 +210,34 @@ export class Commands {
 
     public copyPath = () => {
         return vscode.commands.registerCommand("favorites.copy.path",
-            (value: ViewItem) => {
+            async (value: ViewItem) => {
                 if (value == null) {
                     return;
                 }
                 const fsPath = value.resourceUri.fsPath;
-                console.log(path);
                 try {
-                    clipboardy.writeSync(fsPath);
+                    await vscode.env.clipboard.writeText(fsPath);
+                    vscode.window.showInformationMessage(`Path copied: ${fsPath}`);
                 } catch (e) {
-                    console.log(e);
+                    vscode.window.showErrorMessage(`Failed to copy path: ${e}`);
+                    console.error(e);
                 }
-
             });
     }
     public copyName = () => {
         return vscode.commands.registerCommand("favorites.copy.name",
-            (value: ViewItem) => {
+            async (value: ViewItem) => {
                 if (value == null) {
                     return;
                 }
                 const name = path.basename(value.resourceUri.fsPath);
-                console.log(path);
-                clipboardy.writeSync(name);
-
+                try {
+                    await vscode.env.clipboard.writeText(name);
+                    vscode.window.showInformationMessage(`Name copied: ${name}`);
+                } catch (e) {
+                    vscode.window.showErrorMessage(`Failed to copy name: ${e}`);
+                    console.error(e);
+                }
             });
     }
     public addExternal = () => {
@@ -756,5 +774,137 @@ export class Commands {
             //
 
         });
+    }
+
+    public addUrlFavorite = () => {
+        return vscode.commands.registerCommand("favorites.add.url",
+            async (parentGroup?: ViewItem) => {
+                const url = await vscode.window.showInputBox({
+                    prompt: "Enter URL",
+                    placeHolder: "https://example.com",
+                    validateInput: (value) => {
+                        if (!value) return null;
+                        try {
+                            const parsed = new URL(value);
+                            if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                                return "URL must use http:// or https://";
+                            }
+                            return null;
+                        } catch {
+                            return "Please enter a valid URL";
+                        }
+                    }
+                });
+
+                if (!url) return;
+
+                const alias = await vscode.window.showInputBox({
+                    prompt: "Enter display name (optional)",
+                    placeHolder: "My Bookmark"
+                });
+
+                const parentId = parentGroup?.id;
+                await this.urlFavorites.addUrl(url, alias || undefined, parentId);
+                this.providers.refresh();
+            });
+    }
+
+    public addUrlFromClipboard = () => {
+        return vscode.commands.registerCommand("favorites.add.url.clipboard",
+            async (parentGroup?: ViewItem) => {
+                const clipboardText = await vscode.env.clipboard.readText();
+
+                if (!this.urlFavorites.isValidUrl(clipboardText)) {
+                    vscode.window.showErrorMessage("Clipboard does not contain a valid URL");
+                    return;
+                }
+
+                const alias = await vscode.window.showInputBox({
+                    prompt: "Enter display name (optional)",
+                    placeHolder: clipboardText
+                });
+
+                const parentId = parentGroup?.id;
+                await this.urlFavorites.addUrl(clipboardText, alias || undefined, parentId);
+                this.providers.refresh();
+            });
+    }
+
+    public openUrl = () => {
+        return vscode.commands.registerCommand("favorites.open.url",
+            async (value: ViewItem) => {
+                if (!value?.id) return;
+                const resource = await this.favorites.getResourceById(value.id);
+                if (resource?.url) {
+                    await this.urlFavorites.openUrl(resource.url);
+                }
+            });
+    }
+
+    public copyUrl = () => {
+        return vscode.commands.registerCommand("favorites.copy.url",
+            async (value: ViewItem) => {
+                if (!value?.id) return;
+                const resource = await this.favorites.getResourceById(value.id);
+                if (resource?.url) {
+                    await vscode.env.clipboard.writeText(resource.url);
+                    vscode.window.showInformationMessage(`URL copied: ${resource.url}`);
+                }
+            });
+    }
+
+    public setHighlightColor = () => {
+        return vscode.commands.registerCommand("favorites.set.highlight",
+            async (value: ViewItem) => {
+                if (!value?.id) return;
+
+                const colors = [
+                    { label: '$(circle-filled) Red', value: 'red' },
+                    { label: '$(circle-filled) Orange', value: 'orange' },
+                    { label: '$(circle-filled) Yellow', value: 'yellow' },
+                    { label: '$(circle-filled) Green', value: 'green' },
+                    { label: '$(circle-filled) Blue', value: 'blue' },
+                    { label: '$(circle-filled) Purple', value: 'purple' },
+                    { label: '$(close) Remove Color', value: '' }
+                ];
+
+                const selection = await vscode.window.showQuickPick(colors, {
+                    placeHolder: 'Select highlight color'
+                });
+
+                if (selection !== undefined) {
+                    await this.favorites.updateResource(value.id, {
+                        highlightColor: selection.value || undefined
+                    });
+                    this.decorationProvider.refresh();
+                    this.providers.refresh();
+                }
+            });
+    }
+
+    public setBadge = () => {
+        return vscode.commands.registerCommand("favorites.set.badge",
+            async (value: ViewItem) => {
+                if (!value?.id) return;
+
+                const badge = await vscode.window.showInputBox({
+                    prompt: 'Enter badge (max 2 characters, leave empty to remove)',
+                    placeHolder: 'e.g., !!, ??, 01',
+                    validateInput: (value) => {
+                        if (value && value.length > 2) {
+                            return 'Badge must be 2 characters or less';
+                        }
+                        return null;
+                    }
+                });
+
+                if (badge !== undefined) {
+                    await this.favorites.updateResource(value.id, {
+                        highlightBadge: badge || undefined
+                    });
+                    this.decorationProvider.refresh();
+                    this.providers.refresh();
+                }
+            });
     }
 }

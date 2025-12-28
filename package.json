@@ -1,8 +1,8 @@
 {
-    "name": "favorites",
-    "displayName": "Favorites",
-    "description": "Add files and directories to workspace favorites. Create groups of directories and files. Time saver for complex projects.",
-    "version": "2.4.6",
+    "name": "enhanced-favorites",
+    "displayName": "Enhanced Favorites",
+    "description": "Organize workspace files as favorites with groups, URL bookmarks, and color highlights. Fork of vscode-favorites with remote development fixes.",
+    "version": "3.0.0",
     "categories": [
         "Other"
     ],
@@ -11,11 +11,14 @@
         "favorites",
         "groups",
         "favorite files",
-        "favorite directories"
+        "favorite directories",
+        "urls",
+        "remote",
+        "bookmarks"
     ],
-    "publisher": "kdcro101",
+    "publisher": "solario",
     "engines": {
-        "vscode": "^1.29.0"
+        "vscode": "^1.75.0"
     },
     "galleryBanner": {
         "color": "#283593",
@@ -29,18 +32,16 @@
     },
     "icon": "icons/favorites.png",
     "bugs": {
-        "url": "https://github.com/kdcro101/vscode-favorites/issues"
+        "url": "https://github.com/sgallant/enhanced-favorites-vscode/issues"
     },
-    "homepage": "https://github.com/kdcro101/vscode-favorites/blob/master/README.md",
+    "homepage": "https://github.com/sgallant/enhanced-favorites-vscode/blob/main/README.md",
     "repository": {
         "type": "git",
-        "url": "https://github.com/kdcro101/vscode-favorites.git"
+        "url": "https://github.com/sgallant/enhanced-favorites-vscode.git"
     },
-    "activationEvents": [
-        "*"
-    ],
+    "activationEvents": [],
     "license": "GPL-3.0",
-    "main": "./packed/",
+    "main": "./dist/extension.js",
     "contributes": {
         "keybindings": [
             {
@@ -205,6 +206,11 @@
                     "group": "navigation@1"
                 },
                 {
+                    "command": "favorites.add.url",
+                    "when": "view == favorites",
+                    "group": "navigation@0"
+                },
+                {
                     "command": "favorites.delete.all",
                     "when": "view == favorites",
                     "group": "navigation@0"
@@ -233,6 +239,11 @@
                     "command": "favorites.group.create",
                     "when": "view == favoritesActivity",
                     "group": "navigation@1"
+                },
+                {
+                    "command": "favorites.add.url",
+                    "when": "view == favoritesActivity",
+                    "group": "navigation@0"
                 },
                 {
                     "command": "favorites.delete.all",
@@ -480,6 +491,46 @@
                     "command": "favorites.copy.name",
                     "when": "viewItem == FS_DIRECTORY",
                     "group": "8_copyNameOrPath"
+                },
+                {
+                    "command": "favorites.add.url",
+                    "when": "view == favorites && viewItem == FAVORITE_GROUP",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "favorites.add.url",
+                    "when": "view == favoritesActivity && viewItem == FAVORITE_GROUP",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "favorites.add.url.clipboard",
+                    "when": "view == favorites && viewItem == FAVORITE_GROUP",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "favorites.add.url.clipboard",
+                    "when": "view == favoritesActivity && viewItem == FAVORITE_GROUP",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "favorites.open.url",
+                    "when": "viewItem == FAVORITE_URL",
+                    "group": "navigation"
+                },
+                {
+                    "command": "favorites.copy.url",
+                    "when": "viewItem == FAVORITE_URL",
+                    "group": "8_copyNameOrPath"
+                },
+                {
+                    "command": "favorites.set.highlight",
+                    "when": "viewItem == FAVORITE_FILE || viewItem == FAVORITE_DIRECTORY || viewItem == FAVORITE_URL",
+                    "group": "6_modification"
+                },
+                {
+                    "command": "favorites.set.badge",
+                    "when": "viewItem == FAVORITE_FILE || viewItem == FAVORITE_DIRECTORY || viewItem == FAVORITE_URL",
+                    "group": "6_modification"
                 }
             ]
         },
@@ -635,11 +686,41 @@
             {
                 "command": "favorites.browse",
                 "title": "Favorites: Browse"
+            },
+            {
+                "command": "favorites.add.url",
+                "title": "Add URL Favorite",
+                "category": "Favorites",
+                "icon": "$(globe)"
+            },
+            {
+                "command": "favorites.add.url.clipboard",
+                "title": "Add URL from Clipboard",
+                "category": "Favorites"
+            },
+            {
+                "command": "favorites.open.url",
+                "title": "Open URL",
+                "category": "Favorites"
+            },
+            {
+                "command": "favorites.copy.url",
+                "title": "Copy URL",
+                "category": "Favorites"
+            },
+            {
+                "command": "favorites.set.highlight",
+                "title": "Set Highlight Color",
+                "category": "Favorites"
+            },
+            {
+                "command": "favorites.set.badge",
+                "title": "Set Badge",
+                "category": "Favorites"
             }
         ]
     },
     "devDependencies": {
-        "@types/clipboardy": "^1.1.0",
         "@types/color": "^3.0.0",
         "@types/fs-extra": "^5.0.2",
         "@types/lodash": "^4.14.108",
@@ -648,19 +729,19 @@
         "@types/minimatch": "^3.0.3",
         "@types/nconf": "0.0.37",
         "@types/node": "^9.4.7",
+        "@types/vscode": "^1.75.0",
         "del": "^3.0.0",
         "gulp": "^3.9.1",
         "gulp-rename": "^1.2.2",
         "ts-loader": "^5.3.0",
         "tslint": "^5.9.1",
-        "typescript": "^2.7.2",
+        "typescript": "^5.0.0",
         "vscode": "^1.1.13",
         "vscode-nls-dev": "^2.1.6",
         "webpack": "^4.25.1",
         "webpack-cli": "^3.1.2"
     },
     "dependencies": {
-        "clipboardy": "^1.2.3",
         "color": "^3.0.0",
         "cryptiles": "^4.1.2",
         "fs-extra": "^7.0.0",

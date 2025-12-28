@@ -597,6 +597,25 @@ export class Favorites {
 
                 );
                 break;
+            case ResourceType.URL:
+                o = new ViewItem(
+                    i.urlAlias || i.name,
+                    vscode.TreeItemCollapsibleState.None,
+                    i.url,
+                    "FAVORITE_URL",
+                    i.url,
+                    i.type,
+                    new vscode.ThemeIcon("globe"),
+                    {
+                        command: "favorites.open.url",
+                        title: "Open URL",
+                        arguments: [null],
+                    },
+                    i.id,
+                    i.parent_id,
+                    i.url,
+                );
+                break;
         }
 
         // o.parentViewItem = parentItem;
@@ -722,5 +741,45 @@ export class Favorites {
     }
     private generateId(): string {
         return _.sampleSize("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", 16).join("");
+    }
+
+    public addResource(resource: StoredResource): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.get()
+                .then((list) => {
+                    list.push(resource);
+                    return this.storage.save(list);
+                })
+                .then(() => {
+                    resolve();
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
+    }
+
+    public updateResource(id: string, updates: Partial<StoredResource>): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.get()
+                .then((list) => {
+                    const index = list.findIndex(r => r.id === id);
+                    if (index !== -1) {
+                        list[index] = { ...list[index], ...updates };
+                        return this.storage.save(list);
+                    }
+                    return Promise.resolve();
+                })
+                .then(() => {
+                    resolve();
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
+    }
+
+    public getResourceById(id: string): Promise<StoredResource | undefined> {
+        return this.get().then(list => list.find(r => r.id === id));
     }
 }

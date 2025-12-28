@@ -6,6 +6,7 @@ export enum ResourceType {
     File = "File",
     Group = "Group",
     Directory = "Directory",
+    URL = "URL",
 }
 
 export interface WorkspaceQuickPickItem extends QuickPickItem {
@@ -38,6 +39,12 @@ export interface StoredResource {
     workspacePath: string;
     fsPath?: string;
     iconColor?: string;
+    // NEW fields for URL favorites
+    url?: string;
+    urlAlias?: string;
+    // NEW fields for color highlighting
+    highlightColor?: string;
+    highlightBadge?: string;
 }
 
 export interface FilesystemResource {
