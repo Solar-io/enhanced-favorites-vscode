@@ -2,11 +2,14 @@ import * as vscode from "vscode";
 import { ResourceType, StoredResource } from "../types";
 import { Favorites } from "./favorites";
 import { ViewItem } from "./view-item";
+import workspace from "./workspace";
 
 const MIME_TYPE = "application/vnd.code.tree.favorites";
+const URI_LIST_MIME_TYPE = "text/uri-list";
 
 export class FavoritesDragAndDropController implements vscode.TreeDragAndDropController<ViewItem> {
-    public dropMimeTypes: readonly string[] = [MIME_TYPE];
+    // Accept both internal favorites reordering and external file drops from file explorer
+    public dropMimeTypes: readonly string[] = [MIME_TYPE, URI_LIST_MIME_TYPE];
     public dragMimeTypes: readonly string[] = [MIME_TYPE];
 
     constructor(
@@ -43,6 +46,15 @@ export class FavoritesDragAndDropController implements vscode.TreeDragAndDropCon
         console.log('[Favorites DnD] handleDrop called');
         console.log('[Favorites DnD] target:', target ? { id: target.id, label: target.label, contextValue: target.contextValue } : 'undefined (root)');
 
+        // Check for external file drops from file explorer first
+        const uriListItem = dataTransfer.get(URI_LIST_MIME_TYPE);
+        if (uriListItem) {
+            console.log('[Favorites DnD] External file drop detected');
+            await this.handleExternalDrop(target, uriListItem);
+            return;
+        }
+
+        // Handle internal favorites reordering
         const transferItem = dataTransfer.get(MIME_TYPE);
         console.log('[Favorites DnD] transferItem:', transferItem ? 'found' : 'NOT FOUND');
 
@@ -190,5 +202,123 @@ export class FavoritesDragAndDropController implements vscode.TreeDragAndDropCon
         orderedSiblings.forEach((item, index) => {
             item.sortOrder = index;
         });
+    }
+
+    /**
+     * Handle dropping files/folders from VS Code's file explorer onto the favorites tree.
+     * Files can be dropped onto a group (added to that group) or onto root (added to root level).
+     */
+    private async handleExternalDrop(
+        target: ViewItem | undefined,
+        uriListItem: vscode.DataTransferItem
+    ): Promise<void> {
+        // Determine target group ID
+        let targetGroupId: string | null = null;
+
+        if (target) {
+            if (target.resourceType === ResourceType.Group) {
+                // Dropped onto a group - add items to that group
+                targetGroupId = target.id;
+                console.log('[Favorites DnD] Dropping into group:', target.label);
+            } else {
+                // Dropped onto a file/folder - add to the same parent group
+                targetGroupId = target.parentId || null;
+                console.log('[Favorites DnD] Dropping alongside item, parent:', targetGroupId);
+            }
+        } else {
+            // Dropped on root
+            console.log('[Favorites DnD] Dropping onto root level');
+        }
+
+        // Get URIs from the data transfer
+        let uris: vscode.Uri[] = [];
+
+        try {
+            // The value can be a string (URI list) or already parsed as file objects
+            const value = uriListItem.value;
+            console.log('[Favorites DnD] URI list value type:', typeof value);
+
+            if (typeof value === 'string') {
+                // Parse text/uri-list format (newline-separated URIs)
+                const uriStrings = value.split(/\r?\n/).filter(s => s.trim() && !s.startsWith('#'));
+                uris = uriStrings.map(s => vscode.Uri.parse(s));
+            } else if (Array.isArray(value)) {
+                // Already an array of URIs or file objects
+                uris = value.map(v => {
+                    if (v instanceof vscode.Uri) {
+                        return v;
+                    } else if (typeof v === 'object' && v.path) {
+                        return vscode.Uri.file(v.path);
+                    } else if (typeof v === 'string') {
+                        return vscode.Uri.parse(v);
+                    }
+                    return null;
+                }).filter(u => u !== null) as vscode.Uri[];
+            } else if (value && typeof value === 'object') {
+                // Try to get the asFile/asString methods if available
+                const fileValue = await uriListItem.asFile?.();
+                if (fileValue) {
+                    uris = [vscode.Uri.file(fileValue.name)];
+                } else {
+                    const stringValue = await uriListItem.asString();
+                    if (stringValue) {
+                        const uriStrings = stringValue.split(/\r?\n/).filter(s => s.trim() && !s.startsWith('#'));
+                        uris = uriStrings.map(s => vscode.Uri.parse(s));
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('[Favorites DnD] Error parsing URIs:', e);
+            // Try asString as fallback
+            try {
+                const stringValue = await uriListItem.asString();
+                if (stringValue) {
+                    const uriStrings = stringValue.split(/\r?\n/).filter(s => s.trim() && !s.startsWith('#'));
+                    uris = uriStrings.map(s => vscode.Uri.parse(s));
+                }
+            } catch (e2) {
+                console.error('[Favorites DnD] Fallback parsing also failed:', e2);
+            }
+        }
+
+        console.log('[Favorites DnD] Parsed', uris.length, 'URIs:', uris.map(u => u.fsPath));
+
+        if (uris.length === 0) {
+            console.log('[Favorites DnD] No valid URIs found');
+            return;
+        }
+
+        // Add each file/folder to favorites
+        let addedCount = 0;
+        for (const uri of uris) {
+            if (uri.scheme !== 'file') {
+                console.log('[Favorites DnD] Skipping non-file URI:', uri.toString());
+                continue;
+            }
+
+            const fsPath = uri.fsPath;
+            console.log('[Favorites DnD] Adding path:', fsPath);
+
+            try {
+                // Check if the path is within a workspace folder
+                const workspaceRoot = workspace.workspaceRoot(fsPath);
+
+                if (workspaceRoot) {
+                    // Path is within workspace - use addPathToGroup
+                    await this.favorites.addPathToGroup(targetGroupId, fsPath);
+                } else {
+                    // External path - use addExternalPathToGroup
+                    await this.favorites.addExternalPathToGroup(targetGroupId, fsPath);
+                }
+                addedCount++;
+            } catch (e) {
+                console.error('[Favorites DnD] Failed to add path:', fsPath, e);
+            }
+        }
+
+        if (addedCount > 0) {
+            console.log('[Favorites DnD] Added', addedCount, 'items to favorites');
+            this.onRefresh();
+        }
     }
 }
